@@ -1,0 +1,86 @@
+wandb_version: 1
+
+seed:
+  desc: null
+  value: 381548
+render_mode:
+  desc: null
+  value: rgb_array
+time_limit_max_episode_steps:
+  desc: null
+  value: 500
+parallel_traning_n_envs:
+  desc: null
+  value: 8
+parallel_eval_n_envs:
+  desc: null
+  value: 4
+n_eval_episode:
+  desc: null
+  value: 10
+eval_freq:
+  desc: null
+  value: 5000
+policy_type:
+  desc: null
+  value: MlpLstmPolicy
+total_timesteps:
+  desc: null
+  value: 100000
+env_id:
+  desc: null
+  value: BridgeEnv
+learning_rate:
+  desc: null
+  value: 0.0001
+batch_size:
+  desc: null
+  value: 128
+max_grad_norm:
+  desc: null
+  value: 1
+gae_lambda:
+  desc: null
+  value: 0.98
+gamma:
+  desc: null
+  value: 0.98
+policy_kwargs:
+  desc: null
+  value:
+    net_arch:
+      vf: 64
+      pi: 0
+    lstm_hidden_size: 64
+    ortho_init: false
+    enable_critic_lstm: true
+_wandb:
+  desc: null
+  value:
+    code_path: code/train.py
+    python_version: 3.10.13
+    cli_version: 0.16.0
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1700351128.598306
+    t:
+      1:
+      - 1
+      - 55
+      - 105
+      2:
+      - 1
+      - 49
+      - 55
+      - 105
+      3:
+      - 16
+      - 22
+      - 23
+      - 35
+      4: 3.10.13
+      5: 0.16.0
+      8:
+      - 5
+      13: linux-x86_64
