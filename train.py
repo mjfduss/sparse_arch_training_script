@@ -1,4 +1,6 @@
 import numpy as np
+import gymnasium as gym
+from gymnasium.envs.registration import register
 from sb3_contrib import RecurrentPPO
 from py_bridge_designer.bridge_env import BridgeEnv
 from gymnasium.wrappers.time_limit import TimeLimit
@@ -12,15 +14,6 @@ from wandb.integration.sb3 import WandbCallback
 SEED = int(np.random.uniform(low=0, high=500000))
 print("Seed:", SEED)
 
-
-
-def make_env():
-    env = BridgeEnv(render_mode="rgb_array")
-    env = TimeLimit(env, max_episode_steps=500)
-    return env
-
-env = VecNormalize(make_vec_env(make_env, n_envs=8, seed=SEED))
-
 # Config wandb
 config = {
     "seed": SEED,
@@ -29,7 +22,7 @@ config = {
     "parallel_traning_n_envs": 8,
     "parallel_eval_n_envs": 4,
     "n_eval_episode": 10,
-    "eval_freq": 5000,
+    "eval_freq": 10000,
     "policy_type": "MlpLstmPolicy",
     "total_timesteps": 100000,
     "env_id": "BridgeEnv",
@@ -55,11 +48,24 @@ run = wandb.init(
     save_code=True,  # optional
 )
 
+# Define the Environments
+register(
+    id='BridgeEnv',
+    entry_point=BridgeEnv,
+    max_episode_steps=500
+)
+def make_env():
+    return gym.make('BridgeEnv', render_mode="rgb_array")
+env = VecNormalize(make_vec_env(make_env, n_envs=8, seed=SEED))
+env = VecVideoRecorder(env,f"videos/training/{run.id}",record_video_trigger=lambda x: x % 25000 == 0,video_length=200,)
+eval_env = VecNormalize(make_vec_env(make_env, n_envs=4), training=False, norm_reward=False)
+eval_env = VecVideoRecorder(eval_env,f"videos/eval/{run.id}",record_video_trigger=lambda x: x % 100 == 0,video_length=200,)
+
 # Create the callbacks
 eval_callback = EvalCallback(
-    VecNormalize(make_vec_env(make_env, n_envs=4), training=False, norm_reward=False),
+    eval_env,
     n_eval_episodes=10,
-    eval_freq=5000
+    eval_freq=10000
 )
 progress_bar = ProgressBarCallback()
 
@@ -69,15 +75,7 @@ wandb_callback = WandbCallback(
     verbose=2,
 )
 
-callback = CallbackList([eval_callback, progress_bar, wandb_callback])
-
-# Record Videos
-env = VecVideoRecorder(
-    env,
-    f"videos/{run.id}",
-    record_video_trigger=lambda x: x % 2000 == 0,
-    video_length=200,
-)
+callbacks = CallbackList([eval_callback, progress_bar, wandb_callback])
 
 # Set the model
 model = RecurrentPPO(
@@ -100,4 +98,4 @@ model = RecurrentPPO(
 )
 
 model.learn(total_timesteps=100000, callback=callbacks)
-evaluate_policy(model, env)
+evaluate_policy(model, eval_env, n_eval_episodes=100)
