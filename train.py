@@ -50,7 +50,8 @@ run = wandb.init(
 # Define the Environments
 register(
     id='BridgeEnv',
-    entry_point=BridgeEnv
+    entry_point=BridgeEnv,
+    max_episode_steps=65536
 )
 register(
     id='BridgeEnvEval',
