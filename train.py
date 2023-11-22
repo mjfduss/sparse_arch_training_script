@@ -53,8 +53,8 @@ register(
     entry_point=BridgeEnv
 )
 register(
-    id='BridgeEnvEval'
-    entry_point=BridgeEnv
+    id='BridgeEnvEval',
+    entry_point=BridgeEnv,
     max_episode_steps=1024
 )
 train_env = gym.make('BridgeEnv', render_mode="rgb_array")
