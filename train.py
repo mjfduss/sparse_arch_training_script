@@ -18,11 +18,10 @@ print("Seed:", SEED)
 config = {
     "seed": SEED,
     "render_mode": "rgb_array",
-    "time_limit_max_episode_steps": 500,
     "parallel_traning_n_envs": 8,
     "parallel_eval_n_envs": 4,
     "n_eval_episode": 10,
-    "eval_freq": 10000,
+    "eval_freq": 20000,
     "policy_type": "MlpLstmPolicy",
     "total_timesteps": 100000,
     "env_id": "BridgeEnv",
@@ -51,21 +50,25 @@ run = wandb.init(
 # Define the Environments
 register(
     id='BridgeEnv',
-    entry_point=BridgeEnv,
-    max_episode_steps=500
+    entry_point=BridgeEnv
 )
-def make_env():
-    return gym.make('BridgeEnv', render_mode="rgb_array")
-env = VecNormalize(make_vec_env(make_env, n_envs=8, seed=SEED))
-env = VecVideoRecorder(env,f"videos/training/{run.id}",record_video_trigger=lambda x: x % 25000 == 0,video_length=200,)
+register(
+    id='BridgeEnvEval'
+    entry_point=BridgeEnv
+    max_episode_steps=1024
+)
+train_env = gym.make('BridgeEnv', render_mode="rgb_array")
+train_env = VecNormalize(make_vec_env(train_env, n_envs=8, seed=SEED))
+train_env = VecVideoRecorder(env,f"videos/training/{run.id}",record_video_trigger=lambda x: x % 50000 == 0,video_length=200,)
+eval_env = gym.make('BridgeEnvEval', render_mode="rgb_array")
 eval_env = VecNormalize(make_vec_env(make_env, n_envs=4), training=False, norm_reward=False)
-eval_env = VecVideoRecorder(eval_env,f"videos/eval/{run.id}",record_video_trigger=lambda x: x % 100 == 0,video_length=200,)
+eval_env = VecVideoRecorder(eval_env,f"videos/eval/{run.id}",record_video_trigger=lambda x: x % 10000 == 0,video_length=200,)
 
 # Create the callbacks
 eval_callback = EvalCallback(
     eval_env,
     n_eval_episodes=10,
-    eval_freq=10000
+    eval_freq=20000
 )
 progress_bar = ProgressBarCallback()
 
@@ -80,7 +83,7 @@ callbacks = CallbackList([eval_callback, progress_bar, wandb_callback])
 # Set the model
 model = RecurrentPPO(
         "MlpLstmPolicy",
-        env,
+        train_env,
         learning_rate=0.0001,
         verbose=1,
         batch_size=128,
@@ -97,5 +100,7 @@ model = RecurrentPPO(
         tensorboard_log=f"runs/{run.id}"
 )
 
-model.learn(total_timesteps=100000, callback=callbacks)
-evaluate_policy(model, eval_env, n_eval_episodes=100)
+model.learn(total_timesteps=200000, callback=callbacks)
+evaluate_policy(model, eval_env, n_eval_episodes=10)
+evaluate_policy(model, eval_env, n_eval_episodes=10)
+evaluate_policy(model, eval_env, n_eval_episodes=10)
