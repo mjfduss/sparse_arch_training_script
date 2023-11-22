@@ -60,7 +60,7 @@ register(
 def make_train_env():
     return gym.make('BridgeEnv', render_mode="rgb_array")
 train_env = VecNormalize(make_vec_env(make_train_env, n_envs=8, seed=SEED))
-train_env = VecVideoRecorder(env,f"videos/training/{run.id}",record_video_trigger=lambda x: x % 50000 == 0,video_length=200,)
+train_env = VecVideoRecorder(train_env,f"videos/training/{run.id}",record_video_trigger=lambda x: x % 50000 == 0,video_length=200,)
 def make_eval_env():
     return gym.make('BridgeEnvEval', render_mode="rgb_array")
 eval_env = VecNormalize(make_vec_env(make_eval_env, n_envs=4), training=False, norm_reward=False)
@@ -70,7 +70,7 @@ eval_env = VecVideoRecorder(eval_env,f"videos/eval/{run.id}",record_video_trigge
 eval_callback = EvalCallback(
     eval_env,
     n_eval_episodes=10,
-    eval_freq=20000
+    eval_freq=50000
 )
 progress_bar = ProgressBarCallback()
 
